@@ -1,0 +1,25 @@
+---
+- name: Scan targets
+  hosts: webservers
+  become: true
+  
+  tasks:
+    - name: Ensure NMAP installed
+      apt:
+        name: nmap
+        state: present
+        update_cache: true
+
+    - name: Scan victims
+      shell: "nmap {{ item }} -p 22,80,443,8080 -oG -"
+      loop: "{{ lookup('file', './targets.txt').splitlines() }}"
+      register: scan_results
+
+    - name: Print raw scan results
+      debug:
+        msg: "{{ scan_results }}"
+        
+    - name: Print scan results
+      debug:
+        msg: "{{ item.stdout_lines }}"
+      loop: "{{ scan_results.results }}"
